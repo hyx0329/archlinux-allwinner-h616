@@ -1,0 +1,40 @@
+#
+
+create_image() {
+    # p1: full path to image file
+    # p2: image size, in MiB, default to 4096
+    local image_location=$1
+    local image_size=$2
+    image_size=${image_size:-4096}
+
+    dd if=/dev/zero of="${image_location}" bs=1M count="${image_size}"
+}
+
+initialize_partition_table_mbr() {
+    # A wrapper of parted
+    # p1: full path to image file
+    # pN: partition entry in the format of type:start:end, both ends inclusive
+    #     example: primary:32768s:65535s  for a primary partition of 32 MiB
+    #              primary:32768s:        for a primary partition from 32768 sector to 100% of the disk, must be the end one
+    # it should be noted that the partition sector size is assumed to be 512 bytes
+    local image_file=$1
+    shift
+
+    # create partition table
+    parted -s -a optimal -- "${image_file}" "mklabel msdos"
+
+    local entry
+    for entry in "$@"
+    do
+        local ptype=$(cut -d':' -f1 <<< "${entry}")
+        local pstart=$(cut -d':' -f2 <<< "${entry}")
+        local pend=$(cut -d':' -f3 <<< "${entry}")
+
+        if [ "${pend}" = "" ]; then
+            parted -s -a optimal -- "${image_file}" "mkpart primary ${pstart} 100%"
+            break
+        else
+            parted -s -a optimal -- "${image_file}" "mkpart primary ${pstart} ${pend}"
+        fi
+    done
+}

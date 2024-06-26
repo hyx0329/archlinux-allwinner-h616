@@ -1,0 +1,12 @@
+#
+
+check_var_non_empty() {
+	for v in "$@"
+	do
+		if [ -z "${!v}" ]
+		then
+			printf "$s" "WARNING: Variable $v is empty!\n"
+			return 1
+		fi
+	done
+}

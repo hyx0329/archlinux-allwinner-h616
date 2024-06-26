@@ -1,0 +1,358 @@
+# linux with armbian patches
+# search for "CHANGEME:" when porting
+
+# CHANGEME: the package name and version
+pkgbase=linux-sunxi64-armbian
+pkgver=6.6.35.test2
+# CHANGEME: if you are working on other architectures, like riscv
+arch=(aarch64)
+
+pkgrel=1
+pkgdesc='Linux for Allwinner H616/H618, and possibly other sunxi64 platforms'
+url='https://github.com/torvalds/linux'
+license=(GPL-2.0-only)
+makedepends=(
+  bc
+  cpio
+  gettext
+  libelf
+  pahole
+  perl
+  python
+  tar
+  xz
+
+  # this only required with some platforms due to broken scripts
+  # rockchip64 don't need this though
+  uboot-tools
+
+  # # Who want doc?
+  # # htmldocs
+  # graphviz
+  # imagemagick
+  # python-sphinx
+  # python-yaml
+  # texlive-latexextra
+)
+options=(
+  !debug
+  !strip
+)
+
+# CHANGEME: Linux source
+_srcname=linux
+_srctag="v6.6.35"
+_repourl="git+https://mirrors.tuna.tsinghua.edu.cn/git/linux-stable.git#tag=${_srctag}"
+
+# CHANGEME: Armbian patch config
+# MUST change accordingly
+_patchset=sunxi-6.6
+_patch_arch=arm64
+_patch_platform=allwinner
+_patch_dtbmake_prefix='dtb-$(CONFIG_ARCH_SUNXI) += '
+
+source=(
+  "${_srcname}::${_repourl}" # kernel source
+  config  # the main kernel config file
+
+  # CHANGEME: patch set used and hot fix patches
+  ${_patchset}.tar.gz  # patchset from armbian
+  driver-patches.tar.gz
+  # device trees, overwrite the old ones directly
+  sun50i-h616-mangopi-mq-quad.dts
+  sun50i-h618-orangepi-zero2w.dts
+  # this one is required since 6.6.35, and not required on prior versions
+  0000-armbian-patchset-fix-undecalred-var-in-8250-driver.patch
+)
+
+b2sums=('SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP'
+        'SKIP')
+
+
+export KBUILD_BUILD_HOST=archlinux
+export KBUILD_BUILD_USER=$pkgbase
+export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH})"
+
+
+_apply_patch_series() {
+  local conf_file=$1
+  if [ -f "${conf_file}" ]; then
+    printf "%s" "Now applying patches listed in ${conf_file}...\n"
+    local patch_path=$(dirname "${conf_file}")
+    local patch_file
+    while read -r patch_file; do
+      [[ "$patch_file" != -* && "$patch_file" != \#* && "$patch_file" != "" ]] || continue # skip the disabled, comments, and empty lines
+      patch_file=${patch_path}/$patch_file
+      [ -f "${patch_file}" ] || { printf "%s" "ERROR: Patch '$patch_file' stated but not found!\n"; exit 1; }
+      printf "%s" "Applying patch ${patch_file}...\n"
+      patch -Np1 < ${patch_file}
+    done < "${conf_file}"
+  fi
+}
+
+
+prepare() {
+  cd $_srcname
+
+  echo "Setting version..."
+  echo "-$pkgrel" > localversion.10-pkgrel
+  echo "${pkgbase#linux}" > localversion.20-pkgname
+  make -s defconfig
+  make -s kernelrelease > version
+  make -s mrproper
+
+  ### Patching start!
+
+  # CHANGEME: apply driver patch set
+  _apply_patch_series "${srcdir}/driver-patches/series-6.6.conf"
+  echo "obj-\$(CONFIG_SPARD_WLAN_SUPPORT) += uwe5622/" >> "drivers/net/wireless/Makefile"
+
+  # apply kernel patch set
+  _apply_patch_series "${srcdir}/${_patchset}/series.conf"
+
+  # apply ordered patches
+  # order matters, use natural sort(-v)
+  local patch_file
+  for patch_file in $(ls -1Av ${srcdir}/${_patchset}/); do
+    patch_file="${srcdir}/${_patchset}/${patch_file}"
+    [ -f "${patch_file}" ] && [ "patch" = "${patch_file##*.}" ] || continue # skip non-patch files
+    patch -Np1 < "${patch_file}"
+  done
+
+
+  local platform_dts_path="arch/${_patch_arch}/boot/dts/${_patch_platform}"
+  # overwrite devicetrees
+  if [ -d "${srcdir}/${_patchset}/dt" ]; then
+    cp ${srcdir}/${_patchset}/dt/* "${platform_dts_path}"
+    # auto patch Makefile
+    for dts in $(ls -1Av ${srcdir}/${_patchset}/dt/); do
+      local dtb_name=${dts%dts}dtb
+      if ! grep "$dtb_name" ${platform_dts_path}/Makefile > /dev/null; then
+        echo "${_patch_dtbmake_prefix}$dtb_name" >> ${platform_dts_path}/Makefile
+      fi
+    done
+  fi
+
+  # and the device tree overlays
+  if [ -d "${srcdir}/${_patchset}/overlay" ]; then
+    [ -d "${platform_dts_path}"/overlay ] || mkdir -p "${platform_dts_path}"/overlay
+    cp ${srcdir}/${_patchset}/overlay/* "${platform_dts_path}"/overlay
+  fi
+
+  # apply extra patches, the usual arch style
+  local src
+  for src in "${source[@]}"; do
+    src="${src%%::*}"
+    src="${src##*/}"
+    src="${src%.zst}"
+    [[ $src = *.patch ]] || continue
+    echo "Applying patch $src..."
+    patch -Np1 < "../$src"
+  done
+
+  # apply extra device trees
+  # TODO: simplify?
+  for src in "${source[@]}"; do
+    src="${src%%::*}"
+    src="${src##*/}"
+    src="${src%.zst}"
+    [[ $src = *.dts ]] || continue
+    echo "Copying devicetree $src..."
+    cp "${srcdir}/$src" "${platform_dts_path}"
+    local dtb_name=${src%dts}dtb
+    if ! grep "$dtb_name" ${platform_dts_path}/Makefile > /dev/null; then
+      echo "${_patch_dtbmake_prefix}$dtb_name" >> ${platform_dts_path}/Makefile
+    fi
+  done
+
+  ### Patching end!
+
+  echo "Setting config..."
+  cp ../config .config
+  make KERNELRELEASE="$(<version)" olddefconfig
+  diff -u ../config .config || :
+
+  echo "Prepared $pkgbase version $(<version)"
+}
+
+build() {
+  cd $_srcname
+  make KERNELRELEASE="$(<version)" all
+
+  # Somehow broken, and not required on 6.6, taken from a 6.8 package
+  # make -C tools/bpf/bpftool vmlinux.h feature-clang-bpf-co-re=1
+}
+
+_package() {
+  pkgdesc="The $pkgdesc kernel and modules"
+  depends=(
+    coreutils
+    initramfs
+    kmod
+  )
+  optdepends=(
+    'wireless-regdb: to set the correct wireless channels of your country'
+    'linux-firmware: firmware images needed for some devices'
+  )
+  provides=(
+    KSMBD-MODULE
+    VIRTUALBOX-GUEST-MODULES
+    WIREGUARD-MODULE
+  )
+  replaces=(
+    virtualbox-guest-modules-arch
+    wireguard-arch
+  )
+
+  cd $_srcname
+  local modulesdir="$pkgdir/usr/lib/modules/$(<version)"
+
+  echo "Installing boot image..."
+  # systemd expects to find the kernel here to allow hibernation
+  # https://github.com/systemd/systemd/commit/edda44605f06a41fb86b7ab8128dcf99161d2344
+  install -Dm644 "$(make -s image_name)" "$modulesdir/vmlinuz"
+
+  # Used by mkinitcpio to name the kernel
+  echo "$pkgbase" | install -Dm644 /dev/stdin "$modulesdir/pkgbase"
+
+  echo "Installing modules..."
+  ZSTD_CLEVEL=19 make INSTALL_MOD_PATH="$pkgdir/usr" INSTALL_MOD_STRIP=1 \
+    DEPMOD=/doesnt/exist modules_install  # Suppress depmod
+
+  echo "Installing dtbs..."
+  make INSTALL_DTBS_PATH="$pkgdir/usr/lib/modules/$(<version)/dtb" dtbs_install
+
+  # remove build link
+  rm "$modulesdir"/build
+
+  # add a stable symlink to resource location, so boot scripts don't have to handle the version tags
+  install -dm755 "$pkgdir/boot"
+  ln -s "../usr/lib/modules/$(<version)/dtb" "$pkgdir/boot/dtb-$pkgbase"
+}
+
+_package-headers() {
+  pkgdesc="Headers and scripts for building modules for the $pkgdesc kernel"
+  depends=(pahole)
+
+  cd $_srcname
+  local builddir="$pkgdir/usr/lib/modules/$(<version)/build"
+
+  echo "Installing build files..."
+  install -Dt "$builddir" -m644 .config Makefile Module.symvers System.map \
+    localversion.* version vmlinux
+  # somehow broken, and not required on 6.6
+  # install -Dt "$builddir" -m644 tools/bpf/bpftool/vmlinux.h
+  install -Dt "$builddir/kernel" -m644 kernel/Makefile
+  install -Dt "$builddir/arch/arm64" -m644 arch/arm64/Makefile
+  cp -t "$builddir" -a scripts
+
+  # required when STACK_VALIDATION is enabled
+  # install -Dt "$builddir/tools/objtool" tools/objtool/objtool
+
+  # required when DEBUG_INFO_BTF_MODULES is enabled
+  # install -Dt "$builddir/tools/bpf/resolve_btfids" tools/bpf/resolve_btfids/resolve_btfids
+
+  echo "Installing headers..."
+  cp -t "$builddir" -a include
+  cp -t "$builddir/arch/arm64" -a arch/arm64/include
+  install -Dt "$builddir/arch/arm64/kernel" -m644 arch/arm64/kernel/asm-offsets.s
+
+  install -Dt "$builddir/drivers/md" -m644 drivers/md/*.h
+  install -Dt "$builddir/net/mac80211" -m644 net/mac80211/*.h
+
+  # https://bugs.archlinux.org/task/13146
+  install -Dt "$builddir/drivers/media/i2c" -m644 drivers/media/i2c/msp3400-driver.h
+
+  # https://bugs.archlinux.org/task/20402
+  install -Dt "$builddir/drivers/media/usb/dvb-usb" -m644 drivers/media/usb/dvb-usb/*.h
+  install -Dt "$builddir/drivers/media/dvb-frontends" -m644 drivers/media/dvb-frontends/*.h
+  install -Dt "$builddir/drivers/media/tuners" -m644 drivers/media/tuners/*.h
+
+  # https://bugs.archlinux.org/task/71392
+  install -Dt "$builddir/drivers/iio/common/hid-sensors" -m644 drivers/iio/common/hid-sensors/*.h
+
+  echo "Installing KConfig files..."
+  find . -name 'Kconfig*' -exec install -Dm644 {} "$builddir/{}" \;
+
+  echo "Removing unneeded architectures..."
+  local arch
+  for arch in "$builddir"/arch/*/; do
+    # CHANGEME: when porting to other architectures
+    # eg. [[ $arch = */riscv/ ]] for riscv64
+    [[ $arch = */arm64/ || $arch == */arm/ ]] && continue
+    echo "Removing $(basename "$arch")"
+    rm -r "$arch"
+  done
+
+  echo "Removing documentation..."
+  rm -r "$builddir/Documentation"
+
+  echo "Removing broken symlinks..."
+  find -L "$builddir" -type l -printf 'Removing %P\n' -delete
+
+  echo "Removing loose objects..."
+  find "$builddir" -type f -name '*.o' -printf 'Removing %P\n' -delete
+
+  echo "Stripping build tools..."
+  local file
+  while read -rd '' file; do
+    case "$(file -Sib "$file")" in
+      application/x-sharedlib\;*)      # Libraries (.so)
+        strip -v $STRIP_SHARED "$file" ;;
+      application/x-archive\;*)        # Libraries (.a)
+        strip -v $STRIP_STATIC "$file" ;;
+      application/x-executable\;*)     # Binaries
+        strip -v $STRIP_BINARIES "$file" ;;
+      application/x-pie-executable\;*) # Relocatable binaries
+        strip -v $STRIP_SHARED "$file" ;;
+    esac
+  done < <(find "$builddir" -type f -perm -u+x ! -name vmlinux -print0)
+
+  echo "Stripping vmlinux..."
+  strip -v $STRIP_STATIC "$builddir/vmlinux"
+
+  echo "Adding symlink..."
+  mkdir -p "$pkgdir/usr/src"
+  ln -sr "$builddir" "$pkgdir/usr/src/$pkgbase"
+}
+
+_package-docs() {
+  pkgdesc="Documentation for the $pkgdesc kernel"
+
+  cd $_srcname
+  local builddir="$pkgdir/usr/lib/modules/$(<version)/build"
+
+  echo "Installing documentation..."
+  local src dst
+  while read -rd '' src; do
+    dst="${src#Documentation/}"
+    dst="$builddir/Documentation/${dst#output/}"
+    install -Dm644 "$src" "$dst"
+  done < <(find Documentation -name '.*' -prune -o ! -type d -print0)
+
+  echo "Adding symlink..."
+  mkdir -p "$pkgdir/usr/share/doc"
+  ln -sr "$builddir/Documentation" "$pkgdir/usr/share/doc/$pkgbase"
+}
+
+
+pkgname=(
+  "$pkgbase"
+  "${pkgbase}-headers"
+  # "$pkgbase-docs"
+)
+
+
+for _p in "${pkgname[@]}"; do
+  eval "package_$_p() {
+    $(declare -f "_package${_p#$pkgbase}")
+    _package${_p#$pkgbase}
+  }"
+done
+
+# vim:set ts=8 sts=2 sw=2 et:

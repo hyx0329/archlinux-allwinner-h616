@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+kernel=$1
+initramfs=$2
+unified_image=$3
+
+kernel_name=$(basename "$kernel")
+kernel_name=${kernel_name#*-}
+initrd_name="uInitrd-${kernel_name}"
+
+if [[ $initramfs = *fallback* ]]; then
+    initrd_name="$initrd_name-fallback"
+fi
+
+initramfs_path=$(dirname "$KERNELDESTINATION")
+
+echo "- Creating initrd image $initrd_name and saving to folder $initramfs_path"
+mkimage -A arm64 -O linux -T ramdisk -d "$initramfs" "$initramfs_path/$initrd_name"

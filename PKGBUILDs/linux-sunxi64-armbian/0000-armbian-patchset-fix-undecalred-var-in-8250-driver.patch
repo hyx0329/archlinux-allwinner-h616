@@ -1,0 +1,13 @@
+diff --git a/drivers/tty/serial/8250/8250_dw.c b/drivers/tty/serial/8250/8250_dw.c
+index 021546635fdf..385e5f828f97 100644
+--- a/drivers/tty/serial/8250/8250_dw.c
++++ b/drivers/tty/serial/8250/8250_dw.c
+@@ -585,7 +585,7 @@ static int dw8250_probe(struct platform_device *pdev)
+ 		data->msr_mask_off |= UART_MSR_TERI;
+ 	}
+ 
+-	val = 0;
++	u32 val = 0;
+ 	device_property_read_u32(dev, "fifo-size", &val);
+ 	p->fifosize = val;
+ 
