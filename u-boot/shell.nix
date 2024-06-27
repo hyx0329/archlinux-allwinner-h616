@@ -35,8 +35,6 @@ let
     pkgs.swig
     pkgs.ncurses
   ];
-
-  linux-build-dependencies = [];
 in
 
 pkgs.mkShell {
@@ -50,8 +48,7 @@ pkgs.mkShell {
 
     # testing utilities
     sunxi-tools
-  ] ++ u-boot-build-dependencies
-    ++ linux-build-dependencies;
+  ] ++ u-boot-build-dependencies;
 
   # Set the correct cross compiler prefix, which can be found by inspecting `pkgs'build.gcc`
   shellHook = ''
