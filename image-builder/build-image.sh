@@ -70,7 +70,7 @@ for entry in "${INSTALL_STATIC_FILES[@]}"; do
 done
 
 # install offline packages
-if [ -n "${INSTALL_EXTRA_PACKAGES[@]}" ]; then
+if [ 0 -lt "${#INSTALL_EXTRA_PACKAGES[@]}" ]; then
     pacstrap -G -M -U "${_PACSTRAP_EXTRA_PARAMS[@]}" "${_MOUNT_POINT}" "${INSTALL_EXTRA_PACKAGES[@]}"
 fi
 
