@@ -3,7 +3,7 @@
 
 # CHANGEME: the package name and version
 pkgbase=linux-sunxi64-armbian
-pkgver=6.6.35.test2
+pkgver=6.6.31.test1
 # CHANGEME: if you are working on other architectures, like riscv
 arch=(aarch64)
 
@@ -41,7 +41,7 @@ options=(
 
 # CHANGEME: Linux source
 _srcname=linux
-_srctag="v6.6.35"
+_srctag="v6.6.31"
 _repourl="git+https://mirrors.tuna.tsinghua.edu.cn/git/linux-stable.git#tag=${_srctag}"
 
 # CHANGEME: Armbian patch config
@@ -62,7 +62,7 @@ source=(
   sun50i-h616-mangopi-mq-quad.dts
   sun50i-h618-orangepi-zero2w.dts
   # this one is required since 6.6.35, and not required on prior versions
-  0000-armbian-patchset-fix-undecalred-var-in-8250-driver.patch
+  # 0000-armbian-patchset-fix-undecalred-var-in-8250-driver.patch
 )
 
 b2sums=('SKIP'
@@ -70,7 +70,7 @@ b2sums=('SKIP'
         'SKIP'
         'SKIP'
         'SKIP'
-        'SKIP'
+        # 'SKIP'
         'SKIP')
 
 
