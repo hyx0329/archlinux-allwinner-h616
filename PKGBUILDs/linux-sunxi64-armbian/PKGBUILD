@@ -63,6 +63,8 @@ source=(
   sun50i-h618-orangepi-zero2w.dts
   # this one is required since 6.6.35, and not required on prior versions
   # 0000-armbian-patchset-fix-undecalred-var-in-8250-driver.patch
+  # UWE5622 set mac address properly so don't trigger warnings(not breaking rbtree)
+  0000-armbian-patchset-driver-uwe5622-set-mac-through-eth_hw_addr_set.patch
 )
 
 b2sums=('SKIP'
@@ -70,7 +72,7 @@ b2sums=('SKIP'
         'SKIP'
         'SKIP'
         'SKIP'
-        # 'SKIP'
+        'SKIP'
         'SKIP')
 
 
