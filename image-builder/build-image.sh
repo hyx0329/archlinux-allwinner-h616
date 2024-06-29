@@ -64,6 +64,11 @@ for entry in "${INSTALL_STATIC_FILES[@]}"; do
     dest_location=$(cut -d':' -f2 <<< "${entry}")
     file_mode=$(cut -d':' -f3 <<< "${entry}")
 
+    if [ "$file_mode" = "link" ]; then
+        ln -sfT "${source_file}" "${_MOUNT_POINT}/${dest_location}"
+        continue
+    fi
+
     [ -n "$file_mode" ] || file_mode=644
 
     install -Dm"${file_mode}" "${source_file}" "${_MOUNT_POINT}/${dest_location}"
@@ -119,6 +124,6 @@ echo "%wheel ALL=(ALL:ALL) ALL" | install -o root -g root -Dm640 /dev/stdin "${_
 # CHANGEME: should be put else where
 ln -sfTv dtb-linux-sunxi64-armbian "${_MOUNT_POINT}/boot/dtb"
 
-# # umount and unload
+# umount and unload
 umount "${_LOOP_DEVICE}p1"
 losetup -d "${_LOOP_DEVICE}"
