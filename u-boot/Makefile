@@ -15,7 +15,7 @@ ATF_BINARY = ${ATF_DIR}/${ATF_BINARY_PATH}/${ATF_BINARY_NAME}
 
 U_BOOT_DIR = u-boot
 U_BOOT_REPO := https://github.com/u-boot/u-boot.git
-U_BOOT_TAG := 1ebd659cf020843fd8e8ef90d85a66941cbab6ec
+U_BOOT_TAG := v2024.04
 U_BOOT_CONFIGS_DIRECTORY = configs
 U_BOOT_DEFCONFIG := orangepi_zero2w_defconfig
 U_BOOT_DTS_DIRECTORY = arch/arm/dts
@@ -74,6 +74,7 @@ prepare-u-boot:
 	git -C ${U_BOOT_DIR} reset --hard
 	git -C ${U_BOOT_DIR} clean -f -d
 	git -C ${U_BOOT_DIR} checkout ${U_BOOT_TAG}
+	./scripts/apply-patches.sh patches "${U_BOOT_DIR}"
 	cp patches/defconfigs/* ${U_BOOT_DIR}/${U_BOOT_CONFIGS_DIRECTORY}
 	cp -r patches/dts/* ${U_BOOT_DIR}/${U_BOOT_DTS_DIRECTORY}
 	./scripts/patch-dts-makefile.sh "patches/dts" '${U_BOOT_DTS_NAMESPACE}' "${U_BOOT_DIR}/${U_BOOT_DTS_DIRECTORY}/Makefile"
