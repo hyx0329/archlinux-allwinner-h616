@@ -1,0 +1,26 @@
+diff --git a/hciattach_sprd.c b/hciattach_sprd.c
+index 39d9b3d..7bf78cf 100755
+--- a/hciattach_sprd.c
++++ b/hciattach_sprd.c
+@@ -98,7 +98,7 @@
+ #define FW_DATE_M_BYTE             9
+ #define FW_DATE_Y_BYTE             10
+ 
+-#define BT_CONFIG_PATH             "/lib/firmware"
++#define BT_CONFIG_PATH             "/usr/lib/hciattach-opi"
+ #define BT_HC_HDR_SIZE             (sizeof(HC_BT_HDR))
+ #define BT_VND_OP_RESULT_SUCCESS   0
+ #define BT_VND_OP_RESULT_FAIL      1
+diff --git a/hciattach_sprd_2.c b/hciattach_sprd_2.c
+index ce621b7..ef6ea1d 100755
+--- a/hciattach_sprd_2.c
++++ b/hciattach_sprd_2.c
+@@ -97,7 +97,7 @@
+ #define FW_DATE_M_BYTE             9
+ #define FW_DATE_Y_BYTE             10
+ 
+-#define BT_CONFIG_PATH             "/lib/firmware"
++#define BT_CONFIG_PATH             "/usr/lib/hciattach-opi"
+ #define BT_HC_HDR_SIZE             (sizeof(HC_BT_HDR))
+ #define BT_VND_OP_RESULT_SUCCESS   0
+ #define BT_VND_OP_RESULT_FAIL      1

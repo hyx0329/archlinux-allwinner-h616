@@ -1,0 +1,53 @@
+# Maintainer: Your Name <youremail@domain.com>
+pkgname=hciattach-opi
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Necessary tools and resources to make uwe5622 work on OPi's boards"
+arch=('aarch64' 'x86_64')
+url="https://github.com/orangepi-xunlong/orangepi-build"
+license=('GPL')
+depends=(bluez)
+makedepends=(bluez-libs)
+options=(!debug)
+_srcdir=hcitools
+source=("${_srcdir}.tar.gz"
+        "0000-fix-bluetooth-header-location.patch"
+		"0001-fix-some-implicit-declaration.patch"
+		"0002-fix-integer-cast.patch"
+		"0003-change-firmware-location-to-usr-lib-hciattach--opi.patch"
+		"hciattach-opi@.service"
+		"bt_configure_pskey.ini"
+		"bt_configure_rf.ini")
+sha256sums=('bf2db4c54b8047139bd36e836f99dec595121e8bac668ad47475af7b0c9407db'
+            '18be5d18a023eb9e7c3ad3611f39d0d8bc95c55910f155a7bdeae3f0f12487ea'
+            '387498eb026fcff638d55d56960860e38f0d5d00ee66968da4f11b362baf610b'
+            'c160a53456fe688ca833703df4c4436233d97df61b128d1ea8a0389431855094'
+            'da296852b55f70305b237d2a10d06b24ff4b8d566a61a9337e772222d8bd5b74'
+            '2114e83fce3636c9be7f41eae0fdd5c70479e1702f4ec95afe039ea353f16906'
+            '5a7a1f63fd68916201031d4b24a11dc67ae45f6cd695950bc325fb6a487ad0ac'
+            '4044252baefdfa0e884b61d4c42f4d07f74a8f3121ba1923e782968d013d617d')
+
+prepare() {
+	cd "${_srcdir}"
+
+	local src
+	for src in "${source[@]}"; do
+		src="${src%%::*}"
+		src="${src##*/}"
+		src="${src%.zst}"
+		[[ $src = *.patch ]] || continue
+		echo "Applying patch $src..."
+		patch -Np1 < "../$src"
+	done
+}
+
+build() {
+	cd "${_srcdir}"
+	make hciattach_opi
+}
+
+package() {
+	install -D -m755 -t "${pkgdir}/usr/bin" "${_srcdir}/output/hciattach_opi"
+	install -D -m644 -t "${pkgdir}/usr/lib/systemd/system" hciattach-opi@.service
+	install -D -m644 -t "${pkgdir}/usr/lib/hciattach-opi" bt_configure_pskey.ini bt_configure_rf.ini
+}

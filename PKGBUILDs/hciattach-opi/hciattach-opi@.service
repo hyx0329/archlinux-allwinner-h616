@@ -1,0 +1,13 @@
+[Unit]
+Description=Bluetooth with hciattach_opi on /dev/%i, use sprd protocol by default
+BindTo=dev-%i.device
+After=bluetooth.service dev-%i.device
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/hciattach_opi -s 1500000 /dev/%i sprd
+TimeoutSec=0
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

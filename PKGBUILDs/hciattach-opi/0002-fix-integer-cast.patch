@@ -1,0 +1,13 @@
+diff --git a/hciattach.c b/hciattach.c
+index 3eb0f15..2863cb3 100644
+--- a/hciattach.c
++++ b/hciattach.c
+@@ -1198,7 +1198,7 @@ struct uart_t uart[] = {
+ //Realtek_add_end
+ 
+ 	{ "xradio",     0x0000, 0x0000, HCI_UART_H4, 115200, 1500000, 0, DISABLE_PM, NULL, xradio_init, xradio_post},
+-	{  "sprd",      0x0000, 0x0000, NULL, 115200, 1500000, FLOW_CTL, DISABLE_PM, NULL, sprd_init, sprd_post},
++	{  "sprd",      0x0000, 0x0000, HCI_UART_H4, 115200, 1500000, FLOW_CTL, DISABLE_PM, NULL, sprd_init, sprd_post},
+ 
+ 	{ NULL, 0 }
+ };

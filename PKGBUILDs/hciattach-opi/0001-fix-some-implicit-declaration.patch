@@ -1,0 +1,62 @@
+diff --git a/hciattach.c b/hciattach.c
+index 9e994f9..3eb0f15 100644
+--- a/hciattach.c
++++ b/hciattach.c
+@@ -27,6 +27,9 @@
+ #include <config.h>
+ #endif
+ 
++// for ppoll
++#define _GNU_SOURCE
++
+ #include <stdio.h>
+ #include <errno.h>
+ #include <fcntl.h>
+diff --git a/hciattach_qualcomm.c b/hciattach_qualcomm.c
+index 0e02e1e..eb72a0f 100644
+--- a/hciattach_qualcomm.c
++++ b/hciattach_qualcomm.c
+@@ -40,6 +40,7 @@
+ #include <sys/poll.h>
+ #include <sys/param.h>
+ #include <sys/ioctl.h>
++#include <sys/uio.h>
+ 
+ #include <bluetooth/bluetooth.h>
+ #include <bluetooth/hci.h>
+diff --git a/hciattach_sprd.c b/hciattach_sprd.c
+index 612e324..39d9b3d 100755
+--- a/hciattach_sprd.c
++++ b/hciattach_sprd.c
+@@ -9,6 +9,7 @@
+ #include <stdint.h>
+ #include <sys/termios.h>
+ #include <sys/ioctl.h>
++#include <sys/uio.h>
+ #include <limits.h>
+ #include "hciattach.h"
+ 
+diff --git a/hciattach_tialt.c b/hciattach_tialt.c
+index c3caa49..5c7f3a5 100644
+--- a/hciattach_tialt.c
++++ b/hciattach_tialt.c
+@@ -39,6 +39,7 @@
+ #include <sys/poll.h>
+ #include <sys/param.h>
+ #include <sys/ioctl.h>
++#include <sys/uio.h>
+ 
+ #include <bluetooth/bluetooth.h>
+ #include <bluetooth/hci.h>
+diff --git a/hciattach_xr.c b/hciattach_xr.c
+index c42b009..3d489f8 100644
+--- a/hciattach_xr.c
++++ b/hciattach_xr.c
+@@ -9,6 +9,7 @@
+ #include <stdint.h>
+ #include <sys/termios.h>
+ #include <sys/ioctl.h>
++#include <sys/time.h>
+ #include <limits.h>
+ #include "hciattach.h"
+ 

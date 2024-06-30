@@ -1,0 +1,68 @@
+diff --git a/hciattach.h b/hciattach.h
+index f92af74..350c80e 100644
+--- a/hciattach.h
++++ b/hciattach.h
+@@ -23,7 +23,7 @@
+ 
+ #include <termios.h>
+ 
+-#include <bluetooth.h>
++#include <bluetooth/bluetooth.h>
+ 
+ #ifndef N_HCI
+ #define N_HCI	15
+diff --git a/lib/bluetooth.c b/lib/bluetooth.c
+index 05fe2c3..1487b9b 100644
+--- a/lib/bluetooth.c
++++ b/lib/bluetooth.c
+@@ -35,8 +35,8 @@
+ #include <string.h>
+ #include <sys/socket.h>
+ 
+-#include "bluetooth.h"
+-#include "hci.h"
++#include "bluetooth/bluetooth.h"
++#include "bluetooth/hci.h"
+ 
+ void baswap(bdaddr_t *dst, const bdaddr_t *src)
+ {
+diff --git a/lib/hci.c b/lib/hci.c
+index 913597f..8e90aa1 100644
+--- a/lib/hci.c
++++ b/lib/hci.c
+@@ -41,9 +41,9 @@
+ #include <sys/ioctl.h>
+ #include <sys/socket.h>
+ 
+-#include "bluetooth.h"
+-#include "hci.h"
+-#include "hci_lib.h"
++#include "bluetooth/bluetooth.h"
++#include "bluetooth/hci.h"
++#include "bluetooth/hci_lib.h"
+ 
+ #ifndef MIN
+ #define MIN(x, y) ((x) < (y) ? (x) : (y))
+diff --git a/lib/sdp.c b/lib/sdp.c
+index 6221bde..2359549 100644
+--- a/lib/sdp.c
++++ b/lib/sdp.c
+@@ -42,12 +42,12 @@
+ #include <sys/un.h>
+ #include <netinet/in.h>
+ 
+-#include "bluetooth.h"
+-#include "hci.h"
+-#include "hci_lib.h"
+-#include "l2cap.h"
+-#include "sdp.h"
+-#include "sdp_lib.h"
++#include "bluetooth/bluetooth.h"
++#include "bluetooth/hci.h"
++#include "bluetooth/hci_lib.h"
++#include "bluetooth/l2cap.h"
++#include "bluetooth/sdp.h"
++#include "bluetooth/sdp_lib.h"
+ 
+ #define SDPINF(fmt, arg...) syslog(LOG_INFO, fmt "\n", ## arg)
+ #define SDPERR(fmt, arg...) syslog(LOG_ERR, "%s: " fmt "\n", __func__ , ## arg)
