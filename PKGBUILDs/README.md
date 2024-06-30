@@ -11,6 +11,19 @@ It can still be used on other sunxi boards though.
 
 The package uses ArchLinux lts kernel(6.6) package as a template, and utilizes the patches from armbian build.
 
+This package is cross-compile compatible.
+To cross compile it on a powerful x86_64 host, run the following command instead of the plain makepkg:
+
+```bash
+makepkg ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CARCH=aarch64
+```
+
+*All other linux packages can be cross compiled in the same way as well.*
+
+*header package will fail and it's expected :)*
+
+*The linux headers will probably not work, because they are compiled for the builder machine(x86_64) instead of the target machine(arm64).*
+
 ## hciattach-opi
 
 Currently UWE5622 needs special care to enable both WiFi and bluetooth. This package is the tool to enable bluetooth.
