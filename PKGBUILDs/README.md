@@ -9,4 +9,13 @@ These packages are meant to be built on an arm64 host.
 linux-sunxi64-armbian is a kernel package tweaked to support MangoPi MQ Quad and OrangePi Zero 2W.
 It can still be used on other sunxi boards though.
 
-The package is based on ArchLinux lts kernel(6.6) and utilizes the patches from armbian build.
+The package uses ArchLinux lts kernel(6.6) package as a template, and utilizes the patches from armbian build.
+
+## hciattach-opi
+
+Currently UWE5622 needs special care to enable both WiFi and bluetooth. This package is the tool to enable bluetooth.
+
+After building and installing of the package, enable and start the service `hciattach-opi@ttyBT0` to enable bluetooth at boot.
+
+If bluetoothctl complains org.bluez.Error.NotReady, check the rfkill status, and unblock the device if necessary. The default state is blocked.
+`hciN`(N for an integer) is the working bluetooth device, and bluez only use `hciN`.
