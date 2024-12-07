@@ -1,0 +1,13 @@
+diff --git a/drivers/net/wireless/uwe5622/unisocwcn/Makefile b/drivers/net/wireless/uwe5622/unisocwcn/Makefile
+index f9c5957..5c561fc 100644
+--- a/drivers/net/wireless/uwe5622/unisocwcn/Makefile
++++ b/drivers/net/wireless/uwe5622/unisocwcn/Makefile
+@@ -330,7 +330,7 @@ ccflags-y += -DCONFIG_WL_WAKE_HOST_EN
+ #ccflags-y += -DCONFIG_WCN_RESUME_KEEPPWR_RESETSDIO
+ #ccflags-y += -DCONFIG_WCN_CHECK_MODULE_VENDOR
+ #ifneq ($(TARGET_BUILD_VARIANT),user)
+-ccflags-y += -DCONFIG_WCN_LOOPCHECK
++#ccflags-y += -DCONFIG_WCN_LOOPCHECK
+ #ccflags-y += -DCONFIG_CPLOG_DEBUG
+ #endif
+ #ccflags-y += -DCONFIG_MEM_PD

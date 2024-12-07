@@ -17,18 +17,16 @@ For linux part:
 
 For os image:
 - It implments tools to build a full minimal ArchLinux os image.
+- Linux and some utilities are packaged as ArchLinux packages.
 
 Other:
 - `misc` is the place to hold non-software parts, like the official documents, 3d-models, non-official mods, etc.
 
 ## Issues
 
-- ~~I cannot get my orangepi zero 2w boot with latest mainline u-boot. It's probably a kernel issue and it's still under investigation.~~
-    - ~~BTW I don't know why the community image is not working as well.~~
-    - It looks like a u-boot issue.
-    - linux 6.6.31 works great with armbian patches, but later versions are not
-        - on 6.6.35, uwe5622 driver will halt the system
-    - I have to replicate armbian's work in a different way.
+- uwe5622 driver
+    - it must be loaded after cpufreq_dt(or any module provides cpufreq access)
+    - it may cause system soft lock
 
 ## Credits
 
