@@ -91,6 +91,28 @@ _apply_patch_series() {
   fi
 }
 
+_kcfg() {
+  local option=$1
+  local value=$2
+  case "$value" in
+    y)
+      ./scripts/config --enable "$option"
+      ;;
+    n)
+      ./scripts/config --disable "$option"
+      ;;
+    m)
+      ./scripts/config --module "$option"
+      ;;
+    undef)
+      ./scripts/config --undefine "$option"
+      ;;
+    *)
+      ./scripts/config --set-str "$option" "$value"
+      ;;
+  esac
+}
+
 
 prepare() {
   cd $_srcname
@@ -167,6 +189,31 @@ prepare() {
   echo "Setting config..."
   cp ../linux-sunxi64-current.config .config
   make KERNELRELEASE="$(<version)" olddefconfig
+
+  # apply customized configs
+  _kcfg SECURITY_DMESG_RESTRICT y
+  _kcfg SECURITY_LANDLOCK y
+
+  _kcfg PROFILING y
+  _kcfg BPF_SYSCALL y
+  _kcfg KPROBE_EVENTS y
+  _kcfg BPF_EVENTS y
+  _kcfg BPF_STREAM_PARSER y
+
+  _kcfg BPF_LSM y
+  _kcfg LSM "landlock,lockdown,yama,integrity,apparmor,bpf"
+
+  _kcfg DEBUG_KERNEL y
+  _kcfg DEBUG_INFO y
+  _kcfg DEBUG_INFO_NONE undef
+  _kcfg DEBUG_INFO_REDUCED undef
+  _kcfg DEBUG_INFO_DWARF5 y
+  _kcfg DEBUG_INFO_BTF y
+  _kcfg DEBUG_INFO_BTF_MODULES y
+
+  # make sure it's valid
+  make KERNELRELEASE="$(<version)" olddefconfig
+
   diff -u ../linux-sunxi64-current.config .config || :
 
   echo "Prepared $pkgbase version $(<version)"
@@ -240,9 +287,8 @@ _package-headers() {
   install -Dt "$builddir" -m644 .config Makefile Module.symvers System.map \
     localversion.* version vmlinux
 
-  if [ -z "${CROSS_COMPILE}" ]; then
-    install -Dt "$builddir" -m644 tools/bpf/bpftool/vmlinux.h
-  fi
+  # kernel post 6.8
+  install -Dt "$builddir" -m644 tools/bpf/bpftool/vmlinux.h
 
   install -Dt "$builddir/kernel" -m644 kernel/Makefile
   install -Dt "$builddir/arch/arm64" -m644 arch/arm64/Makefile
