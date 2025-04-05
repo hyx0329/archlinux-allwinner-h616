@@ -3,7 +3,7 @@
 
 # CHANGEME: the package name and version
 pkgbase=linux-sunxi64-armbian
-pkgver=6.6.60.test1
+pkgver=6.12.21.test1
 # CHANGEME: if you are working on other architectures, like riscv
 arch=(aarch64)
 
@@ -41,33 +41,29 @@ options=(
 
 # CHANGEME: Linux source
 _srcname=linux
-_srctag="v6.6.60"
+_srctag="v6.12.21"
 _repourl="git+https://mirrors.tuna.tsinghua.edu.cn/git/linux-stable.git#tag=${_srctag}"
 
 # CHANGEME: Armbian patch config
 # MUST change accordingly
-_patchset=sunxi-6.6
+_patchset=sunxi-6.12
 _patch_arch=arm64
 _patch_platform=allwinner
 _patch_dtbmake_prefix='dtb-$(CONFIG_ARCH_SUNXI) += '
 
 source=(
   "${_srcname}::${_repourl}" # kernel source
-  config  # the main kernel config file
+  #config  # the main kernel config file
+  linux-sunxi64-current.config
 
   # CHANGEME: patch set used and hot fix patches
   ${_patchset}.tar.gz  # patchset from armbian
-  driver-patches.tar.gz
   # device trees, overwrite the old ones directly
   sun50i-h616-mangopi-mq-quad.dts
   sun50i-h618-orangepi-zero2w.dts
-  # UWE5622 set mac address properly so don't trigger warnings(not breaking rbtree)
-  0000-armbian-patchset-driver-uwe5622-set-mac-through-eth_hw_addr_set.patch
 )
 
 b2sums=('SKIP'
-        'SKIP'
-        'SKIP'
         'SKIP'
         'SKIP'
         'SKIP'
@@ -107,10 +103,6 @@ prepare() {
   make -s mrproper
 
   ### Patching start!
-
-  # CHANGEME: apply driver patch set
-  _apply_patch_series "${srcdir}/driver-patches/series-6.6.conf"
-  echo "obj-\$(CONFIG_SPARD_WLAN_SUPPORT) += uwe5622/" >> "drivers/net/wireless/Makefile"
 
   # apply kernel patch set
   _apply_patch_series "${srcdir}/${_patchset}/series.conf"
@@ -173,9 +165,11 @@ prepare() {
   ### Patching end!
 
   echo "Setting config..."
-  cp ../config .config
+  #cp ../config .config
+  cp ../linux-sunxi64-current.config .config
   make KERNELRELEASE="$(<version)" olddefconfig
-  diff -u ../config .config || :
+  #diff -u ../config .config || :
+  diff -u ../linux-sunxi64-current.config .config || :
 
   echo "Prepared $pkgbase version $(<version)"
 }
