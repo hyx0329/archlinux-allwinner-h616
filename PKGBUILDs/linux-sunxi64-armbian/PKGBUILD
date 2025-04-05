@@ -2,8 +2,9 @@
 # search for "CHANGEME:" when porting
 
 # CHANGEME: the package name and version
+_kernelversion=6.12.21
 pkgbase=linux-sunxi64-armbian
-pkgver=6.12.21.test1
+pkgver=${_kernelversion}.test1
 # CHANGEME: if you are working on other architectures, like riscv
 arch=(aarch64)
 
@@ -41,7 +42,7 @@ options=(
 
 # CHANGEME: Linux source
 _srcname=linux
-_srctag="v6.12.21"
+_srctag="v${_kernelversion}"
 _repourl="git+https://mirrors.tuna.tsinghua.edu.cn/git/linux-stable.git#tag=${_srctag}"
 
 # CHANGEME: Armbian patch config
@@ -53,8 +54,7 @@ _patch_dtbmake_prefix='dtb-$(CONFIG_ARCH_SUNXI) += '
 
 source=(
   "${_srcname}::${_repourl}" # kernel source
-  #config  # the main kernel config file
-  linux-sunxi64-current.config
+  linux-sunxi64-current.config # kernel config from armbian
 
   # CHANGEME: patch set used and hot fix patches
   ${_patchset}.tar.gz  # patchset from armbian
@@ -165,10 +165,8 @@ prepare() {
   ### Patching end!
 
   echo "Setting config..."
-  #cp ../config .config
   cp ../linux-sunxi64-current.config .config
   make KERNELRELEASE="$(<version)" olddefconfig
-  #diff -u ../config .config || :
   diff -u ../linux-sunxi64-current.config .config || :
 
   echo "Prepared $pkgbase version $(<version)"
@@ -178,8 +176,10 @@ build() {
   cd $_srcname
   make KERNELRELEASE="$(<version)" all
 
-  # Somehow broken, and not required on 6.6, taken from a 6.8 package
-  # make -C tools/bpf/bpftool vmlinux.h feature-clang-bpf-co-re=1
+  if [ -z "${CROSS_COMPILE}" ]; then
+    # not cross compile, we can build this tool
+    make -C tools/bpf/bpftool vmlinux.h feature-clang-bpf-co-re=1
+  fi
 }
 
 _package() {
@@ -239,11 +239,16 @@ _package-headers() {
   echo "Installing build files..."
   install -Dt "$builddir" -m644 .config Makefile Module.symvers System.map \
     localversion.* version vmlinux
-  # somehow broken, and not required on 6.6
-  # install -Dt "$builddir" -m644 tools/bpf/bpftool/vmlinux.h
+
+  if [ -z "${CROSS_COMPILE}" ]; then
+    install -Dt "$builddir" -m644 tools/bpf/bpftool/vmlinux.h
+  fi
+
   install -Dt "$builddir/kernel" -m644 kernel/Makefile
   install -Dt "$builddir/arch/arm64" -m644 arch/arm64/Makefile
+  install -Dt "$builddir/arch/arm" -m644 arch/arm/Makefile
   cp -t "$builddir" -a scripts
+  ln -srt "$builddir" "$builddir/scripts/gdb/vmlinux-gdb.py"
 
   # required when STACK_VALIDATION is enabled
   # install -Dt "$builddir/tools/objtool" tools/objtool/objtool
@@ -337,10 +342,12 @@ _package-docs() {
 
 pkgname=(
   "$pkgbase"
-  "${pkgbase}-headers"
   # "$pkgbase-docs"
 )
 
+if [ -z "${CROSS_COMPILE}" ]; then
+  pkgname+=("${pkgbase}-headers")
+fi
 
 for _p in "${pkgname[@]}"; do
   eval "package_$_p() {
