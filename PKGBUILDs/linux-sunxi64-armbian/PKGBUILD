@@ -61,9 +61,11 @@ source=(
   # device trees, overwrite the old ones directly
   sun50i-h616-mangopi-mq-quad.dts
   sun50i-h618-orangepi-zero2w.dts
+  uwe5622-driver.tar.gz
 )
 
 b2sums=('SKIP'
+        'SKIP'
         'SKIP'
         'SKIP'
         'SKIP'
@@ -125,6 +127,11 @@ prepare() {
   make -s mrproper
 
   ### Patching start!
+
+  # apply driver for uwe5622
+  _apply_patch_series "${srcdir}/uwe5622-driver/uwe5622-6.12-part1.conf"
+  echo "obj-\$(CONFIG_SPARD_WLAN_SUPPORT) += uwe5622/" >> "drivers/net/wireless/Makefile"
+  _apply_patch_series "${srcdir}/uwe5622-driver/uwe5622-6.12-part2.conf"
 
   # apply kernel patch set
   _apply_patch_series "${srcdir}/${_patchset}/series.conf"
