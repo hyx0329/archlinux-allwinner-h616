@@ -9,20 +9,18 @@ These packages are meant to be built on an arm64 host.
 linux-sunxi64-armbian is a kernel package tweaked to support MangoPi MQ Quad and OrangePi Zero 2W.
 It can still be used on other sunxi boards though.
 
-The package uses ArchLinux lts kernel(6.6) package as a template, and utilizes the patches from armbian build.
+The package uses ArchLinux lts kernel(6.6, 6.12) package as a template, and utilizes the patches from armbian build.
 
 This package is cross-compile compatible.
 To cross compile it on a powerful x86_64 host, run the following command instead of the plain makepkg:
 
 ```bash
-makepkg ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CARCH=aarch64
+makepkg MAKEFLAGS="-j$(nproc)" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CARCH=aarch64
 ```
 
 *All other linux packages can be cross compiled in the same way as well.*
 
-*header package will fail and it's expected :)*
-
-*The linux headers will probably not work, because they are compiled for the builder machine(x86_64) instead of the target machine(arm64).*
+*header package will fail and it's expected :)* well the script is updated to make sure the header package will NOT be built when `CROSS_COMPILE` is set. If it's required, build it on your arm device.
 
 ## hciattach-opi
 
