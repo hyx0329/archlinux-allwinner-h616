@@ -9,6 +9,20 @@ source shlib/prepare.lib
 source shlib/image-ops.lib
 
 
+error_handler() {
+	if [[ $(findmnt -M "${WORKING_DIR}/mount_point") ]]; then
+		umount "${WORKING_DIR}/mount_point"
+		losetup -d "${_LOOP_DEVICE}"
+	fi
+	if [ -f "${_IMAGE_FILE_PATH}" ]; then
+		printf "You might want to delete %s manually.\n" "${_IMAGE_FILE_PATH}"
+		printf "That file will NOT be overwritten if exists.\n"
+	fi
+	exit
+}
+trap error_handler ERR EXIT
+
+
 [ -f settings.env ] && source settings.env || {
     echo "Settings load failed! Exiting!"
     exit 1
@@ -35,6 +49,9 @@ initialize_partition_table_mbr "${_IMAGE_FILE_PATH}" "${MBR_PARTITION_SETUP[@]}"
 
 # make image a loop device
 _LOOP_DEVICE=$(losetup -f -P --show "${_IMAGE_FILE_PATH}")
+
+# sometimes the partition table is not loaded(we're fast XD)
+partprobe "${_LOOP_DEVICE}"
 
 # format partitions
 # well currently here only exists a rootfs partition
@@ -127,3 +144,5 @@ ln -sfTv dtb-linux-sunxi64-armbian "${_MOUNT_POINT}/boot/dtb"
 # umount and unload
 umount "${_LOOP_DEVICE}p1"
 losetup -d "${_LOOP_DEVICE}"
+
+exit 0
