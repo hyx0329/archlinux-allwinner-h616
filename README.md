@@ -1,8 +1,13 @@
 # ArchLinux on H616/H618 ARM boards
 
-Now working progress.
+Now seems working fine, thanks to various developers.
 
-Current kernel version 6.6.31.
+Current kernel version 6.12.21.
+
+This repo currently supports following boards:
+
+- MangoPi MQ Quad
+- OrangePi Zero 2W
 
 ## What have been done?
 
@@ -13,7 +18,7 @@ For u-boot part:
 
 For linux part:
 - Mainline linux is used.
-- It takes patches from Armbian project, and consolidates them to an ArchLinux kernel package.
+- It takes patches from Armbian project(copied directly, but packed in a tar ball for convenience), and consolidates them to an ArchLinux kernel package.
 
 For os image:
 - It implments tools to build a full minimal ArchLinux os image.
@@ -25,8 +30,11 @@ Other:
 ## Issues
 
 - uwe5622 driver
+    - will not be automatic loaded. write the config in `modules-load.d` or `modprobe.d`
     - it must be loaded after cpufreq_dt(or any module provides cpufreq access)
     - it may cause system soft lock
+- u-boot(or boot script)
+    - cannot boot initramfs directly, must use an initrd.
 
 ## Credits
 

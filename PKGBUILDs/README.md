@@ -6,8 +6,10 @@ These packages are meant to be built on an arm64 host.
 
 ## linux-sunxi64-armbian
 
+Current armbian/build version: 95b8c4cc8c252d4f9dbcbc17611e835550b3fa70
+
 linux-sunxi64-armbian is a kernel package tweaked to support MangoPi MQ Quad and OrangePi Zero 2W.
-It can still be used on other sunxi boards though.
+It can still be used to support other H616/H618 boards though.
 
 The package uses ArchLinux lts kernel(6.6, 6.12) package as a template, and utilizes the patches from armbian build.
 
@@ -20,13 +22,15 @@ makepkg MAKEFLAGS="-j$(nproc)" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CARCH
 
 *All other linux packages can be cross compiled in the same way as well.*
 
-*header package will fail and it's expected :)* well the script is updated to make sure the header package will NOT be built when `CROSS_COMPILE` is set. If it's required, build it on your arm device.
+*header package may fail and it's expected :)*
+well the script is updated to make sure the header package will NOT be built when `CROSS_COMPILE` is set. If it's required, build it on your arm device.
 
 ## hciattach-opi
 
-Currently UWE5622 needs special care to enable both WiFi and bluetooth. This package is the tool to enable bluetooth.
+This is the necessary glue driver to enable UWE5622's bluetooth on Linux.
+Copied from OPi's repo.
 
-After building and installing of the package, enable and start the service `hciattach-opi@ttyBT0` to enable bluetooth at boot.
+After building and installing of the package, enable and start the service `hciattach-opi@ttyBT0` to enable bluetooth device at boot.
 
 If bluetoothctl complains org.bluez.Error.NotReady, check the rfkill status, and unblock the device if necessary. The default state is blocked.
-`hciN`(N for an integer) is the working bluetooth device, and bluez only use `hciN`.
+BTW `hciN`(N for an integer) is the actual working bluetooth device interface, and bluez only use `hciN`.
