@@ -1,0 +1,47 @@
+/dts-v1/;
+/plugin/;
+
+/* Waveshare ETH/USB HUB HAT (B) ethernet LED override
+ * Apply as user-overlays, put dtbo in `/boot/overlay-user`
+ * Compile with something like `dtc -I dts -O dtb -o waveshare-hub.dtbo waveshare-hub.dtso`
+ *
+ * need a patch from(which is included in armbian):
+ * https://patches.linaro.org/project/netdev/patch/20210814181107.138992-2-mail@david-bauer.net/
+ */
+
+/ {
+	compatible = "allwinner,sun50i-h618", "allwinner,sun50i-h616";
+
+	fragment@0 {
+		target = <&ehci1>;
+		__overlay__ {
+			// USB port number starts from 1!
+			hub@1 {
+				// Waveshare ETH/USB HUB HAT (B)
+				// Red LED is static power indicator
+				// LED1 is Eth Green, high active
+				// LED2 is Eth Orange, low active
+				compatible = "usb1a40,101";
+				reg = <1>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				rtl8152: device@4 {
+					compatible = "realtek,rtl8152";
+					reg = <4>; // port index
+
+					/* Set according to RTL8152B-VB-CG.PDF:
+					 * https://www.alldatasheet.com/datasheet-pdf/download/1132332/REALTEK/RTL8152B-VB-CG.html
+					 * Here:
+					 * 0x20BA:
+					 * - 0b0010: led mode 1, reserved, led 1 high active, led 0 low active
+					 * - 0b0000: undocumented
+					 * - 0b1011: LED1 config, here is Link10/100+Act10/100
+					 * - 0b1010: LED0 config, here is Link100+Act100
+					 */
+					realtek,led-data = <0x20BA>;
+				};
+			};
+		};
+	};
+};
