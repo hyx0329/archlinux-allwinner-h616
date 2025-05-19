@@ -28,7 +28,7 @@
 
 		led-0 {
 			function = LED_FUNCTION_STATUS;
-			color = <LED_COLOR_ID_GREEN>;
+			color = <LED_COLOR_ID_BLUE>;
 			gpios = <&pio 2 13 GPIO_ACTIVE_HIGH>; /* PC13 */
 		};
 	};
