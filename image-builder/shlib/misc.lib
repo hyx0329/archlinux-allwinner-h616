@@ -5,8 +5,12 @@ check_var_non_empty() {
 	do
 		if [ -z "${!v}" ]
 		then
-			printf "$s" "WARNING: Variable $v is empty!\n"
+			printf "$s" "ERROR: Variable $v is empty!\n"
 			return 1
 		fi
 	done
+}
+
+check_is_root() {
+	[[ $EUID -eq 0 ]]
 }
