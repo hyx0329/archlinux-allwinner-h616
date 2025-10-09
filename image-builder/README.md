@@ -7,19 +7,29 @@ Here is a set of shell scripts to generate a simple archlinux image.
     - `qemu-user-static`
     - `qemu-user-static-binfmt`
     - maybe more
-- configure the settings
-    - the config file is a regular bash script to be sourced
-    - either in `settings.env`, which will be read by `build-image.sh` if no config file is provided
-    - or you may supply a path parameter to specify the config file used
-        - e.g. `sudo ./build-image.sh other-settings.env`
+- configure the settings in `settings.env`
+    - You should change `WORKING_DIR` as your RAM may not be big enough to contain the image file.
+    - This file will be sourced directly by `build-image.sh`, if no other config is provided.
 - run `build-image.sh` with root privilege to build the full image
+    - For MangoPi MQ Quad: `./build-image.sh settings-mangopi-mq-quad.env`
+    - For OrangePi Zero 2W: `./build-image.sh settings-orangepi-zero-2w.env`
+    - The differences are the preinstalled wireless chip drivers and kernel packages.
+    - Yes the first parameter passed to builder script is the custom config file to use.
+    - Two configs both source the `settings.env` to share some default values.
 
-*the scripts in `shlib` are supporting libs consisting of all low-level logics*
+*the scripts in `shlib` are supportive libs consisting of all low-level logics*
 
-## things to do after first boot
+## Things to do after first boot
 
 - resize partition
     - not documented here
 - initialize keyring
     - `pacman-key --init`
     - `pacman-key --populate archlinux archlinuxarm`
+
+### To enable bluetooth on OrangePi Zero 2W
+
+- run `systemctl enable --now hciattach-opi@ttyBT0` to enable the userspace driver
+- run `systemctl enable --now bluetooth` to enable the bluetooth service
+- run `rfkill list` to check if BT is blocked
+    - unblock with `rfkill unblock [ID]` if necessary

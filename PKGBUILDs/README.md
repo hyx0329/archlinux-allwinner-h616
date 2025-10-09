@@ -32,5 +32,5 @@ Copied from OPi's repo.
 
 After building and installing of the package, enable and start the service `hciattach-opi@ttyBT0` to enable bluetooth device at boot.
 
-If bluetoothctl complains org.bluez.Error.NotReady, check the rfkill status, and unblock the device if necessary. The default state is blocked.
+If bluetoothctl complains org.bluez.Error.NotReady, check the rfkill status(`rfkill list`), and unblock the device(`rfkill unblock`) if necessary. The default state is blocked.
 BTW `hciN`(N for an integer) is the actual working bluetooth device interface, and bluez only use `hciN`.
