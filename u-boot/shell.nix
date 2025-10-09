@@ -2,8 +2,8 @@
 # Currently serves as an overlay on the existing components.
 let
   nixpkgs_ball = fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/tarball/nixos-24.05";
-    sha256 = "1q7y5ygr805l5axcjhn0rn3wj8zrwbrr0c6a8xd981zh8iccmx0p";
+    url = "https://github.com/NixOS/nixpkgs/tarball/63dacb46bf939521bdc93981b4cbb7ecb58427a0";
+    sha256 = "0zydsqiaz8qi4zd63zsb2gij2p614cgkcaisnk11wjy3nmiq0x1s";
   };
 
   pkgs = import nixpkgs_ball { config = { allowUnfree = true; }; overlays = [ ]; };
