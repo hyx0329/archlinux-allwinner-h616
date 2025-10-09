@@ -9,6 +9,27 @@ This repo currently supports following boards:
 - MangoPi MQ Quad
 - OrangePi Zero 2W
 
+## How to use the content
+
+### Option 1: Use image builder and build the OS image(recommended)
+
+- go to `image-builder` folder
+- follow the instructions in `image-builder/README.md`
+- flash the generated image to your SD card device
+- resize rootfs partition to utilize all space on card
+
+### Option 2: Pick only prebuilt files
+
+- Minimum
+    - Install u-boot binary manually
+    - Install prebuilt kernel package using pacman
+    - Write proper u-boot boot script, refer `distro-scripts/boot.cmd`
+- With wireless access
+    - Install firmware files to correct locations
+        - see board specific configs for details
+    - Load correct driver modules(`sprdwl_ng` for uwe5622's wifi)
+        - For uwe5622, `hciattach-opi` is required to utilize bluetooth
+
 ## What have been done?
 
 For u-boot part:
@@ -35,6 +56,8 @@ Other:
     - it may cause system soft lock
 - u-boot(or boot script)
     - cannot boot initramfs directly, must use an initrd.
+- H616
+    - 6.12 kernel is known causing H616(not H618) halt but the reason is unknown
 
 ## Credits
 
