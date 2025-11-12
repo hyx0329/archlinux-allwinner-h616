@@ -1,15 +1,16 @@
 # linux with armbian patches
 # search for "CHANGEME:" when porting
+# TODO: use armbian source directly, and using it with auxillary scripts
 
 # CHANGEME: the package name and version
-_kernelversion=6.12.21
+_kernelversion=6.16.8
 pkgbase=linux-sunxi64-armbian
-pkgver=${_kernelversion}.test1
+pkgver=${_kernelversion}.edge1
 # CHANGEME: if you are working on other architectures, like riscv
 arch=(aarch64)
 
 pkgrel=1
-pkgdesc='Linux for Allwinner H616/H618, and possibly other sunxi64 platforms'
+pkgdesc='Linux for Allwinner H616/H618, and possibly other sunxi64 platforms, based on Armbian patches'
 url='https://github.com/torvalds/linux'
 license=(GPL-2.0-only)
 makedepends=(
@@ -41,32 +42,37 @@ options=(
 )
 
 # CHANGEME: Linux source
-_srcname=linux
-_srctag="v${_kernelversion}"
-_repourl="git+https://mirrors.tuna.tsinghua.edu.cn/git/linux-stable.git#tag=${_srctag}"
+# A: Using Git
+# _srcname=linux
+# _srctag="v${_kernelversion}"
+# _repourl="git+https://mirrors.tuna.tsinghua.edu.cn/git/linux-stable.git#tag=${_srctag}"
+# B: Using tarball
+_srcname=linux-${_kernelversion}
+_srcball="https://cdn.kernel.org/pub/linux/kernel/v${_kernelversion%%.*}.x/${_srcname}.tar.xz"
 
 # CHANGEME: Armbian patch config
 # MUST change accordingly
-_patchset=sunxi-6.12
+_patchset=sunxi-6.16
 _patch_arch=arm64
 _patch_platform=allwinner
 _patch_dtbmake_prefix='dtb-$(CONFIG_ARCH_SUNXI) += '
+_kernel_config="linux-sunxi64-edge.config" # kernel config from armbian
 
 source=(
-  "${_srcname}::${_repourl}" # kernel source
-  linux-sunxi64-current.config # kernel config from armbian
+  # "${_srcname}::${_repourl}" # kernel source using Git
+  "${_srcball}" # kernel source using tarball
 
   # CHANGEME: patch set used and hot fix patches
   ${_patchset}.tar.gz  # patchset from armbian
+  ${_kernel_config}
+
   # device trees, overwrite the old ones directly
   sun50i-h616-mangopi-mq-quad.dts
-  sun50i-h618-orangepi-zero2w.dts
   uwe5622-driver.tar.gz
   0000-uwe5622-set-mac-through-eth_hw_addr_set.patch
 )
 
 b2sums=('SKIP'
-        'SKIP'
         'SKIP'
         'SKIP'
         'SKIP'
@@ -134,6 +140,8 @@ prepare() {
   _apply_patch_series "${srcdir}/uwe5622-driver/uwe5622-6.12-part1.conf"
   echo "obj-\$(CONFIG_SPARD_WLAN_SUPPORT) += uwe5622/" >> "drivers/net/wireless/Makefile"
   _apply_patch_series "${srcdir}/uwe5622-driver/uwe5622-6.12-part2.conf"
+  _apply_patch_series "${srcdir}/uwe5622-driver/uwe5622-6.15.conf"
+  _apply_patch_series "${srcdir}/uwe5622-driver/uwe5622-6.16.conf"
 
   # apply kernel patch set
   _apply_patch_series "${srcdir}/${_patchset}/series.conf"
@@ -154,6 +162,7 @@ prepare() {
     cp ${srcdir}/${_patchset}/dt/* "${platform_dts_path}"
     # auto patch Makefile
     for dts in $(ls -1Av ${srcdir}/${_patchset}/dt/); do
+      [[ $dts = *.dts ]] || continue # take care of dtsi files
       local dtb_name=${dts%dts}dtb
       if ! grep "$dtb_name" ${platform_dts_path}/Makefile > /dev/null; then
         echo "${_patch_dtbmake_prefix}$dtb_name" >> ${platform_dts_path}/Makefile
@@ -196,7 +205,7 @@ prepare() {
   ### Patching end!
 
   echo "Setting config..."
-  cp ../linux-sunxi64-current.config .config
+  cp ../${_kernel_config} .config
   make KERNELRELEASE="$(<version)" olddefconfig
 
   # apply customized configs
@@ -223,7 +232,7 @@ prepare() {
   # make sure it's valid
   make KERNELRELEASE="$(<version)" olddefconfig
 
-  diff -u ../linux-sunxi64-current.config .config || :
+  diff -u ../${_kernel_config} .config || :
 
   echo "Prepared $pkgbase version $(<version)"
 }
@@ -307,7 +316,7 @@ _package-headers() {
   # install -Dt "$builddir/tools/objtool" tools/objtool/objtool
 
   # required when DEBUG_INFO_BTF_MODULES is enabled
-  # install -Dt "$builddir/tools/bpf/resolve_btfids" tools/bpf/resolve_btfids/resolve_btfids
+  install -Dt "$builddir/tools/bpf/resolve_btfids" tools/bpf/resolve_btfids/resolve_btfids
 
   echo "Installing headers..."
   cp -t "$builddir" -a include
@@ -398,6 +407,7 @@ pkgname=(
   # "$pkgbase-docs"
 )
 
+# TODO: when cross compiling, package the headers with a script building stage
 if [ -z "${CROSS_COMPILE}" ]; then
   pkgname+=("${pkgbase}-headers")
 fi
