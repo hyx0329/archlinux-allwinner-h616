@@ -2,8 +2,8 @@
 # Currently serves as an overlay on the existing components.
 let
   nixpkgs_ball = fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/tarball/63dacb46bf939521bdc93981b4cbb7ecb58427a0";
-    sha256 = "0zydsqiaz8qi4zd63zsb2gij2p614cgkcaisnk11wjy3nmiq0x1s";
+    url = "https://github.com/NixOS/nixpkgs/tarball/11cb3517b3af6af300dd6c055aeda73c9bf52c48";
+    sha256 = "1915r28xc4znrh2vf4rrjnxldw2imysz819gzhk9qlrkqanmfsxd";
   };
 
   pkgs = import nixpkgs_ball { config = { allowUnfree = true; }; overlays = [ ]; };
@@ -43,6 +43,8 @@ pkgs.mkShell {
     pkgs.git
     pkgs.curl
 
+    # build requirements
+    pkgs.gnutls
     # This is the cross compiler
     pkgs'build.gcc
 

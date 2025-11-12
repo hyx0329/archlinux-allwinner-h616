@@ -4,7 +4,7 @@ CROSS_COMPILE ?= aarch64-linux-gnu-
 
 ATF_DIR = atf
 ATF_REPO = https://github.com/ARM-software/arm-trusted-firmware.git
-ATF_TAG := lts-v2.10.4
+ATF_TAG := lts-v2.10.25
 ATF_PLATFORM = sun50i_h616
 ATF_DEBUG ?= 0
 ATF_BINARY_NAME := bl31.bin
@@ -15,10 +15,10 @@ ATF_BINARY = ${ATF_DIR}/${ATF_BINARY_PATH}/${ATF_BINARY_NAME}
 
 U_BOOT_DIR = u-boot
 U_BOOT_REPO := https://github.com/u-boot/u-boot.git
-U_BOOT_TAG := v2024.04
+U_BOOT_TAG := v2025.04
 U_BOOT_CONFIGS_DIRECTORY = configs
 U_BOOT_DEFCONFIG := orangepi_zero2w_defconfig
-U_BOOT_DTS_DIRECTORY = arch/arm/dts
+U_BOOT_DTS_DIRECTORY = dts/upstream/src/arm64/allwinner
 U_BOOT_DTS_NAMESPACE := $$(CONFIG_MACH_SUN50I_H616)
 
 U_BOOT_CROSS_COMPILE := ${CROSS_COMPILE}
@@ -46,6 +46,7 @@ prepare-atf:
 	$(MAKE) -C ${ATF_DIR} realclean
 	git -C ${ATF_DIR} reset --hard
 	git -C ${ATF_DIR} clean -f -d
+	git -C ${ATF_DIR} fetch --tags || :
 	git -C ${ATF_DIR} checkout ${ATF_TAG}
 
 .PHONY: build-atf
@@ -73,11 +74,12 @@ prepare-u-boot:
 	$(MAKE) -C ${U_BOOT_DIR} distclean
 	git -C ${U_BOOT_DIR} reset --hard
 	git -C ${U_BOOT_DIR} clean -f -d
+	git -C ${U_BOOT_DIR} fetch --tags || :
 	git -C ${U_BOOT_DIR} checkout ${U_BOOT_TAG}
 	./scripts/apply-patches.sh patches "${U_BOOT_DIR}"
 	cp patches/defconfigs/* ${U_BOOT_DIR}/${U_BOOT_CONFIGS_DIRECTORY}
 	cp -r patches/dts/* ${U_BOOT_DIR}/${U_BOOT_DTS_DIRECTORY}
-	./scripts/patch-dts-makefile.sh "patches/dts" '${U_BOOT_DTS_NAMESPACE}' "${U_BOOT_DIR}/${U_BOOT_DTS_DIRECTORY}/Makefile"
+# 	./scripts/patch-dts-makefile.sh "patches/dts" '${U_BOOT_DTS_NAMESPACE}' "${U_BOOT_DIR}/${U_BOOT_DTS_DIRECTORY}/Makefile"
 
 .PHONY: build-u-boot
 build-u-boot: ${U_BOOT_BINARY}
@@ -85,6 +87,8 @@ build-u-boot: ${U_BOOT_BINARY}
 ${U_BOOT_BINARY}: ${ATF_BINARY}
 	$(MAKE) clone-u-boot
 	$(MAKE) -C ${U_BOOT_DIR} ${U_BOOT_COMPILE_PARAM} ${U_BOOT_DEFCONFIG}
+	# Remove all boot delay
+	bash -c "cd ${U_BOOT_DIR}; ./scripts/config --set-val BOOTDELAY 0"
 	$(MAKE) -C ${U_BOOT_DIR} ${U_BOOT_COMPILE_PARAM}
 
 print-u-boot-bin-location:

@@ -11,6 +11,7 @@ Use the nix-shell environment for full reproducibility. Alternatively, export a 
 - run `make build-u-boot`, by default it build image for OrangePi Zero 2W
     - for MangoPi MQ Quad, run `make U_BOOT_DEFCONFIG=mangopi_mq_quad_defconfig build-u-boot`
     - for OrangePi Zero 2W, run `make U_BOOT_DEFCONFIG=orangepi_zero2w_defconfig build-u-boot`
+    - for other boards in mainline u-boot, set `U_BOOT_DEFCONFIG` to corresponding defconfig name
 - do either of the following to test the binary
     - flash `u-boot/u-boot-sunxi-with-spl.bin` to SD card at 8KiB.
         `dd if=u-boot/u-boot-sunxi-with-spl.bin of=/dev/card_block_device bs=8K seek=1`
@@ -37,8 +38,5 @@ TODO: determine the package list required.
         - use AXP313 driver instead
             - set DCDC3 to 1500mV(DDR3)
         - remove the interrupt pin for pmu, after all there's none
-        - remove boot delay
-- for OrangePi Zero 2W
-    - boot delay removed
-
-So very little change.
+- for all builds
+    `BOOTDELAY` is set to 0
