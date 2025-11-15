@@ -6,6 +6,7 @@ Here is a set of shell scripts to generate a simple archlinux image.
     - `arch-install-scripts`
     - `qemu-user-static`
     - `qemu-user-static-binfmt`
+    - `uboot-tools`
     - maybe more
 - configure the settings in `settings.env`
     - You should change `WORKING_DIR` as your RAM may not be big enough to contain the image file.
@@ -17,7 +18,7 @@ Here is a set of shell scripts to generate a simple archlinux image.
     - Yes the first parameter passed to builder script is the custom config file to use.
     - Two configs both source the `settings.env` to share some default values.
 
-*the scripts in `shlib` are supportive libs consisting of all low-level logics*
+*the scripts in `shlib` are supportive libs consisting all low-level logics*
 
 ## Things to do after first boot
 
