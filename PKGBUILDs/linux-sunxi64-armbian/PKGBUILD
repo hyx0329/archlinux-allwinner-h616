@@ -28,6 +28,9 @@ makedepends=(
   # rockchip64 don't need this though
   uboot-tools
 
+  # for lsdiff used when applying patches
+  patchutils
+
   # # Who want doc?
   # # htmldocs
   # graphviz
@@ -52,23 +55,25 @@ _srcball="https://cdn.kernel.org/pub/linux/kernel/v${_kernelversion%%.*}.x/${_sr
 
 # CHANGEME: Armbian patch config
 # MUST change accordingly
-_patchset=sunxi-6.16
+_armbian_commit="05303e8474b1b76fe818cc52cc405f2371c2a969"
+_armbian_patchset=sunxi-6.16
 _patch_arch=arm64
 _patch_platform=allwinner
 _patch_dtbmake_prefix='dtb-$(CONFIG_ARCH_SUNXI) += '
 _kernel_config="linux-sunxi64-edge.config" # kernel config from armbian
 
 source=(
+  apply-uwe5622.sh
+
   # "${_srcname}::${_repourl}" # kernel source using Git
   "${_srcball}" # kernel source using tarball
 
-  # CHANGEME: patch set used and hot fix patches
-  ${_patchset}.tar.gz  # patchset from armbian
-  ${_kernel_config}
+  # armbian source
+  "armbian-build::git+https://github.com/armbian/build.git#commit=${_armbian_commit}"
 
   # device trees, overwrite the old ones directly
   sun50i-h616-mangopi-mq-quad.dts
-  uwe5622-driver.tar.gz
+  sun50i-h618-orangepi-zero2w.dts
   0000-uwe5622-set-mac-through-eth_hw_addr_set.patch
 )
 
@@ -137,20 +142,22 @@ prepare() {
   ### Patching start!
 
   # apply driver for uwe5622
-  _apply_patch_series "${srcdir}/uwe5622-driver/uwe5622-6.12-part1.conf"
-  echo "obj-\$(CONFIG_SPARD_WLAN_SUPPORT) += uwe5622/" >> "drivers/net/wireless/Makefile"
-  _apply_patch_series "${srcdir}/uwe5622-driver/uwe5622-6.12-part2.conf"
-  _apply_patch_series "${srcdir}/uwe5622-driver/uwe5622-6.15.conf"
-  _apply_patch_series "${srcdir}/uwe5622-driver/uwe5622-6.16.conf"
+  "${srcdir}"/apply-uwe5622.sh \
+      "${srcdir}/armbian-build" \
+      "${srcdir}/${_srcname}" \
+      "${_kernelversion}" \
+      "$(cut -d'-' -f2 <<< "${_kernel_config}")"
 
   # apply kernel patch set
-  _apply_patch_series "${srcdir}/${_patchset}/series.conf"
+  _apply_patch_series "${srcdir}/armbian-build/patch/kernel/archive/${_armbian_patchset}/series.conf"
 
-  # apply ordered patches
+  # apply armbian patches
+  # 1, ordered patches
   # order matters, use natural sort(-v)
+  local patch_directory=${srcdir}/armbian-build/patch/kernel/archive/${_armbian_patchset}
   local patch_file
-  for patch_file in $(ls -1Av ${srcdir}/${_patchset}/); do
-    patch_file="${srcdir}/${_patchset}/${patch_file}"
+  for patch_file in $(ls -1Av "${patch_directory}"/); do
+    patch_file="${patch_directory}/${patch_file}"
     [ -f "${patch_file}" ] && [ "patch" = "${patch_file##*.}" ] || continue # skip non-patch files
     patch -Np1 < "${patch_file}"
   done
@@ -158,10 +165,10 @@ prepare() {
 
   local platform_dts_path="arch/${_patch_arch}/boot/dts/${_patch_platform}"
   # overwrite devicetrees
-  if [ -d "${srcdir}/${_patchset}/dt" ]; then
-    cp ${srcdir}/${_patchset}/dt/* "${platform_dts_path}"
+  if [ -d "${patch_directory}/dt" ]; then
+    cp "${patch_directory}/dt/"* "${platform_dts_path}"
     # auto patch Makefile
-    for dts in $(ls -1Av ${srcdir}/${_patchset}/dt/); do
+    for dts in $(ls -1Av ${patch_directory}/dt/); do
       [[ $dts = *.dts ]] || continue # take care of dtsi files
       local dtb_name=${dts%dts}dtb
       if ! grep "$dtb_name" ${platform_dts_path}/Makefile > /dev/null; then
@@ -171,9 +178,9 @@ prepare() {
   fi
 
   # and the device tree overlays
-  if [ -d "${srcdir}/${_patchset}/overlay" ]; then
+  if [ -d "${patch_directory}/overlay" ]; then
     [ -d "${platform_dts_path}"/overlay ] || mkdir -p "${platform_dts_path}"/overlay
-    cp ${srcdir}/${_patchset}/overlay/* "${platform_dts_path}"/overlay
+    cp ${patch_directory}/overlay/* "${platform_dts_path}"/overlay
   fi
 
   # apply extra patches, the usual arch style
@@ -205,7 +212,7 @@ prepare() {
   ### Patching end!
 
   echo "Setting config..."
-  cp ../${_kernel_config} .config
+  cp "${srcdir}/armbian-build/config/kernel/${_kernel_config}" .config
   make KERNELRELEASE="$(<version)" olddefconfig
 
   # apply customized configs
@@ -232,7 +239,7 @@ prepare() {
   # make sure it's valid
   make KERNELRELEASE="$(<version)" olddefconfig
 
-  diff -u ../${_kernel_config} .config || :
+  diff -u "${srcdir}/armbian-build/config/kernel/${_kernel_config}" .config || :
 
   echo "Prepared $pkgbase version $(<version)"
 }
