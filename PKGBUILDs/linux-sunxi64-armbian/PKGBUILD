@@ -1,11 +1,19 @@
 # linux with armbian patches
 # search for "CHANGEME:" when porting
-# TODO: use armbian source directly, and using it with auxillary scripts
+
+# CHANGEME: Armbian patch config, kernel version, etc.
+_kernelversion=6.12.23
+# MUST change accordingly
+_armbian_commit="05303e8474b1b76fe818cc52cc405f2371c2a969"
+_armbian_patchset=sunxi-${_kernelversion%.*}
+_patch_arch=arm64
+_patch_platform=allwinner
+_patch_dtbmake_prefix='dtb-$(CONFIG_ARCH_SUNXI) += '
+_kernel_config="linux-sunxi64-current.config" # kernel config from armbian
 
 # CHANGEME: the package name and version
-_kernelversion=6.16.8
 pkgbase=linux-sunxi64-armbian
-pkgver=${_kernelversion}.edge1
+pkgver=${_kernelversion}.current1
 # CHANGEME: if you are working on other architectures, like riscv
 arch=(aarch64)
 
@@ -44,32 +52,18 @@ options=(
   !strip
 )
 
-# CHANGEME: Linux source
-# A: Using Git
-# _srcname=linux
-# _srctag="v${_kernelversion}"
-# _repourl="git+https://mirrors.tuna.tsinghua.edu.cn/git/linux-stable.git#tag=${_srctag}"
-# B: Using tarball
+# Linux source
+# Using tarball
 _srcname=linux-${_kernelversion}
 _srcball="https://cdn.kernel.org/pub/linux/kernel/v${_kernelversion%%.*}.x/${_srcname}.tar.xz"
 
-# CHANGEME: Armbian patch config
-# MUST change accordingly
-_armbian_commit="05303e8474b1b76fe818cc52cc405f2371c2a969"
-_armbian_patchset=sunxi-6.16
-_patch_arch=arm64
-_patch_platform=allwinner
-_patch_dtbmake_prefix='dtb-$(CONFIG_ARCH_SUNXI) += '
-_kernel_config="linux-sunxi64-edge.config" # kernel config from armbian
-
 source=(
-  apply-uwe5622.sh
-
-  # "${_srcname}::${_repourl}" # kernel source using Git
-  "${_srcball}" # kernel source using tarball
-
   # armbian source
   "armbian-build::git+https://github.com/armbian/build.git#commit=${_armbian_commit}"
+
+  apply-uwe5622.sh
+
+  "${_srcball}" # kernel source using tarball
 
   # device trees, overwrite the old ones directly
   sun50i-h616-mangopi-mq-quad.dts

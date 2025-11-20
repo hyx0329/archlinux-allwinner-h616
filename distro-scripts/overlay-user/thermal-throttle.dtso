@@ -1,0 +1,100 @@
+/dts-v1/;
+/plugin/;
+
+/* Test shows H616 can really handle 100 deg celsius.
+ * This file serves an example for special need.
+ */
+
+/ {
+	compatible = "allwinner,sun50i-h618", "allwinner,sun50i-h616";
+
+	fragment@0 {
+		target-path = "/thermal-zones/cpu-thermal";
+		__overlay__ {
+
+			/delete-node/ trips;
+
+			trips {
+				cpu_alert_warm: cpu-trip-0 {
+					temperature = <65000>;
+					hysteresis = <2000>;
+					type = "passive";
+				};
+				cpu_alert_hot: cpu-trip-1 {
+					temperature = <70000>;
+					hysteresis = <2000>;
+					type = "passive";
+				};
+				cpu_alert_hotter: cpu-trip-2 {
+					temperature = <80000>;
+					hysteresis = <2000>;
+					type = "passive";
+				};
+				cpu_alert_very_hot: cpu-trip-3 {
+					temperature = <85000>;
+					hysteresis = <2000>;
+					type = "passive";
+				};
+				cpu_critical: cpu-trip-4 {
+					temperature = <110000>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+
+			cooling-maps {
+				/* How things work:
+				 *   - Kernel monitor temp change
+				 *   - kernel apply predefined cooling profile to cooling-device(s)
+				 *
+				 * Current configuration:
+				 * - 1.5 GHz - 1.4 GHz  (warm)
+				 * - 1.3 GHz - 1.2 GHz  (hot)
+				 * - 1.2 GHz - 1 GHz    (hotter)
+				 * - 792 MHz - min      (very hot)
+				 */
+
+				/* go down as low as 1.416GHz, see opp table */
+				limit_warm {
+					trip = <&cpu_alert_warm>;
+					cooling-device =
+						<&cpu0 0xffffffff 2>,
+						<&cpu1 0xffffffff 2>,
+						<&cpu2 0xffffffff 2>,
+						<&cpu3 0xffffffff 2>;
+				};
+
+				/* limit to 1.32GHz, seems okay under stress at 80 degree celsius
+				 */
+				limit_hot {
+					trip = <&cpu_alert_hot>;
+					cooling-device =
+						<&cpu0 3 3>,
+						<&cpu1 3 3>,
+						<&cpu2 3 3>,
+						<&cpu3 3 3>;
+				};
+
+				/* limit to 1.2GHz */
+				limit_hotter {
+					trip = <&cpu_alert_hotter>;
+					cooling-device =
+						<&cpu0 4 6>,
+						<&cpu1 4 6>,
+						<&cpu2 4 6>,
+						<&cpu3 4 6>;
+				};
+
+				/* limit to ~800Mhz */
+				limit_very_hot {
+					trip = <&cpu_alert_very_hot>;
+					cooling-device =
+						<&cpu0 8 0xffffffff>,
+						<&cpu1 8 0xffffffff>,
+						<&cpu2 8 0xffffffff>,
+						<&cpu3 8 0xffffffff>;
+				};
+			};
+		};
+	};
+};
