@@ -38,6 +38,10 @@ Each board needs its specific u-boot, while the kernel is mostly compatible.
 
 - For u-boot, read `u-boot/README.md`
 - For kernel package, see `PKGBUILDs/linux-sunxi64-armbian`
+    - native build time on a MQ Quad(`-j4`):
+        - real    712m58.118s
+        - user    2398m8.220s
+        - sys     267m37.190s
 - Then you can utilize the image-builder and craft an OS image using your binaries
 
 ## What have been done?
