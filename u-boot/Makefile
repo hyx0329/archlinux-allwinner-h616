@@ -1,4 +1,4 @@
-# Build u-boot for MangoPi MQ Quad
+# Build u-boot
 
 CROSS_COMPILE ?= aarch64-linux-gnu-
 
@@ -39,7 +39,7 @@ help:
 
 .PHONY: clone-atf
 clone-atf:
-	[ -d ${ATF_DIR} ] || { git clone ${ATF_REPO} ${ATF_DIR}; $(MAKE) prepare-atf; }
+	[ -d ${ATF_DIR} ] || { git clone --depth 1 ${ATF_REPO} ${ATF_DIR}; $(MAKE) prepare-atf; }
 
 .PHONY: prepare-atf
 prepare-atf:
@@ -67,7 +67,7 @@ print-atf-bin-location:
 
 .PHONY: clone-u-boot
 clone-u-boot:
-	[ -d ${U_BOOT_DIR} ] || { git clone ${U_BOOT_REPO} ${U_BOOT_DIR}; $(MAKE) prepare-u-boot; }
+	[ -d ${U_BOOT_DIR} ] || { git clone --depth 1 ${U_BOOT_REPO} ${U_BOOT_DIR}; $(MAKE) prepare-u-boot; }
 
 .PHONY: prepare-u-boot
 prepare-u-boot:
