@@ -137,15 +137,22 @@ if [ -f "${UBOOT_BINARY}" ]; then
     # the variables in bootEnv.txt need some substitutions
     cp "${BOOT_SCRIPT_TEMPLATE}" "${_MOUNT_POINT}/boot/boot.cmd"
     mkimage -C none -A "${UBOOT_ARCH}" -T script -d "${_MOUNT_POINT}/boot/boot.cmd" "${_MOUNT_POINT}/boot/boot.scr"
-    # get UUID for substitution
+    # get UUID and FSTYPE for substitution
     _MOUNT_POINT_UUID=$(findmnt -Ufnro UUID -M "${_MOUNT_POINT}")
-    _sed_subst="
+    _MOUNT_POINT_FSTYPE=$(findmnt -Ufnro FSTYPE -M "${_MOUNT_POINT}")
+    _ubootenv_substitution="
     s|^rootdev=.*|rootdev=UUID=${_MOUNT_POINT_UUID}|g
+    s|^rootfstype=.*|rootfstype=${_MOUNT_POINT_FSTYPE}|g
     "
-    sed "${_sed_subst}" "${BOOT_ENV_TEMPLATE}" | install -Dm644 /dev/stdin "${_MOUNT_POINT}/boot/bootEnv.txt"
+    # apply substitution and install file
+    sed -e "${_ubootenv_substitution}" \
+        "${BOOT_ENV_TEMPLATE}" | install -Dm644 /dev/stdin "${_MOUNT_POINT}/boot/bootEnv.txt"
     # some fixup
     if ! grep "^rootdev" "${_MOUNT_POINT}/boot/bootEnv.txt" > /dev/null; then
         printf "rootdev=UUID=%s\n" ${_MOUNT_POINT_UUID} >> "${_MOUNT_POINT}/boot/bootEnv.txt"
+    fi
+    if ! grep "^rootfstype" "${_MOUNT_POINT}/boot/bootEnv.txt" > /dev/null; then
+        printf "rootfstype=%s\n" ${_MOUNT_POINT_FSTYPE} >> "${_MOUNT_POINT}/boot/bootEnv.txt"
     fi
 fi
 
