@@ -37,7 +37,8 @@ TODO: determine the package list required.
 ## u-boot modifications
 
 - for all builds
-    `BOOTDELAY` is set to 0
+    - `BOOTDELAY` is set to 0
+    - Btrfs support is enabled through `CONFIG_FS_BTRFS=y`
 - for MangoPi MQ Quad
     - device tree for MQ Quad created, which is based on orange pi zero2's and zero3's dts.
         - power structure description matches the actual hardware

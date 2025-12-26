@@ -89,6 +89,9 @@ ${U_BOOT_BINARY}: ${ATF_BINARY}
 	$(MAKE) -C ${U_BOOT_DIR} ${U_BOOT_COMPILE_PARAM} ${U_BOOT_DEFCONFIG}
 	# Remove all boot delay
 	bash -c "cd ${U_BOOT_DIR}; ./scripts/config --set-val BOOTDELAY 0"
+	# Enable Btrfs support
+	bash -c "cd ${U_BOOT_DIR}; ./scripts/config --enable FS_BTRFS"
+	$(MAKE) -C ${U_BOOT_DIR} ${U_BOOT_COMPILE_PARAM} olddefconfig
 	$(MAKE) -C ${U_BOOT_DIR} ${U_BOOT_COMPILE_PARAM}
 
 print-u-boot-bin-location:
