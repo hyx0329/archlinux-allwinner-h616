@@ -1,9 +1,10 @@
 # This file is only tested on ArchLinux with Nix installed.
 # Currently serves as an overlay on the existing components.
 let
+  # unstable, 2026-03-06
   nixpkgs_ball = fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/tarball/11cb3517b3af6af300dd6c055aeda73c9bf52c48";
-    sha256 = "1915r28xc4znrh2vf4rrjnxldw2imysz819gzhk9qlrkqanmfsxd";
+    url = "https://github.com/NixOS/nixpkgs/tarball/917fec990948658ef1ccd07cef2a1ef060786846";
+    sha256 = "1x3hmj6vbza01cl5yf9d0plnmipw3ap6y0k5rl9bl11fw7gydvva";
   };
 
   pkgs = import nixpkgs_ball { config = { allowUnfree = true; }; overlays = [ ]; };
@@ -34,19 +35,23 @@ let
     pkgs.python312Packages.setuptools
     pkgs.swig
     pkgs.ncurses
+    pkgs.bison
+    pkgs.flex
   ];
+
+  cross-compiler = pkgs'build.gcc;
 in
 
 pkgs.mkShell {
   packages = [
     # basics
+    pkgs.cacert # required for TLS in pure environment
     pkgs.git
     pkgs.curl
-
-    # build requirements
     pkgs.gnutls
-    # This is the cross compiler
-    pkgs'build.gcc
+
+    # the cross compiler
+    cross-compiler
 
     # testing utilities
     sunxi-tools
@@ -54,6 +59,6 @@ pkgs.mkShell {
 
   # Set the correct cross compiler prefix, which can be found by inspecting `pkgs'build.gcc`
   shellHook = ''
-    export CROSS_COMPILE=aarch64-unknown-linux-gnu-
+    export CROSS_COMPILE=${cross-compiler.targetPrefix}
     '';
 }

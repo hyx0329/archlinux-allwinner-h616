@@ -4,7 +4,7 @@ CROSS_COMPILE ?= aarch64-linux-gnu-
 
 ATF_DIR = atf
 ATF_REPO = https://github.com/ARM-software/arm-trusted-firmware.git
-ATF_TAG := lts-v2.10.25
+ATF_TAG := lts-v2.12.9
 ATF_PLATFORM = sun50i_h616
 ATF_DEBUG ?= 0
 ATF_BINARY_NAME := bl31.bin
@@ -54,8 +54,19 @@ build-atf: ${ATF_BINARY}
 
 ${ATF_BINARY}:
 	$(MAKE) clone-atf
-	$(MAKE) -C ${ATF_DIR} CROSS_COMPILE=${ATF_CROSS_COMPILE} realclean
-	$(MAKE) -C ${ATF_DIR} CROSS_COMPILE=${ATF_CROSS_COMPILE} PLAT=${ATF_PLATFORM} DEBUG=${ATF_DEBUG} bl31
+	$(MAKE) -C ${ATF_DIR} realclean
+	# make toolchain guessing (2.11+) happy,
+	# somehow required when using nix-shell
+	$(MAKE) -C ${ATF_DIR} \
+		CROSS_COMPILE=${ATF_CROSS_COMPILE} \
+		CC=${ATF_CROSS_COMPILE}cc \
+		LD=${ATF_CROSS_COMPILE}cc \
+		AS=${ATF_CROSS_COMPILE}cc \
+		OC=${ATF_CROSS_COMPILE}objcopy \
+		OD=${ATF_CROSS_COMPILE}objdump \
+		PLAT=${ATF_PLATFORM} \
+		DEBUG=${ATF_DEBUG} \
+		bl31
 
 .PHONY: print-atf-location
 print-atf-bin-location:
@@ -83,6 +94,7 @@ prepare-u-boot:
 
 .PHONY: build-u-boot
 build-u-boot: ${U_BOOT_BINARY}
+	@echo "U-Boot binary saved to '${U_BOOT_BINARY}'"
 
 ${U_BOOT_BINARY}: ${ATF_BINARY}
 	$(MAKE) clone-u-boot

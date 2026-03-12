@@ -1,20 +1,27 @@
 # Build u-boot for H616/H618
 
 - u-boot version v2025.04(`34820924edbc4ec7803eb89d9852f4b870fa760a`)
-- atf/TF-A version `lts-v2.10.4`
-    - It's recommended to use ATF `lts-v2.12.8`. NixOS doesn't yet support GCC 15 cross toolchain for it.
+- atf/TF-A version `lts-v2.12.9`
 - Read `Makefile` for configurable options. eg.:
     - `ATF_TAG` to override ATF source tag/commit
     - `U_BOOT_DEFCONFIG` to override which defconfig to use
 
-Use the nix-shell environment for full reproducibility. Alternatively, export a fixed `SOURCE_DATE_EPOCH` and use a fixed toolchain.
+Use the nix-shell environment for full reproducibility:
+
+```sh
+# to enter shell
+nix-shell --pure
+# or run build command directly
+nix-shell --pure --run "make build-u-boot"
+```
+
+Alternatively, export a fixed `SOURCE_DATE_EPOCH` and use a fixed toolchain.
 
 ## Build steps
 
 - install the dependencies or use nix-shell
 - run `make build-u-boot`, by default it build image for OrangePi Zero 2W
     - for MangoPi MQ Quad, run `make U_BOOT_DEFCONFIG=mangopi_mq_quad_defconfig build-u-boot`
-        - please override ATF to `lts-v2.12.8` and use GCC 15, for stability
     - for OrangePi Zero 2W, run `make U_BOOT_DEFCONFIG=orangepi_zero2w_defconfig build-u-boot`
     - for other boards in mainline u-boot, set `U_BOOT_DEFCONFIG` to corresponding defconfig name
 - do either of the following to test the binary
@@ -30,9 +37,7 @@ Use the nix-shell environment for full reproducibility. Alternatively, export a 
 
 ## Requirements
 
-Same with u-boot & TF-A requirements.
-
-TODO: determine the package list required.
+Same with u-boot & TF-A requirements. It's recommended to use nix-shell.
 
 ## u-boot modifications
 
